@@ -2,25 +2,32 @@
 import pandas as pd
 pd.core.common.is_list_like = pd.api.types.is_list_like
 import numpy as np
-import datetime as dt
+import random
+#import datetime as dt
 from pathlib import Path
 import math
 import os
 from scipy.stats import poisson,skellam
+import statistics
+from statistics import mode
 import plotly.express as px
 import plotly.graph_objects as go
 import plotly.io as pio
-from datetime import date, timedelta
+#from datetime import date, timedelta
 import streamlit as st
 from PIL import Image
-import time
+import re
+#import time
+
+from dotenv import load_dotenv
+import json
+from dataclasses import dataclass
+from typing import Any, List
+from web3 import Web3
+
+from wallet_functions import generate_account, get_balance, send_transaction
+
 import warnings
-
-
-from sklearn.ensemble import RandomForestClassifier
-from sklearn.preprocessing import StandardScaler
-from sklearn.model_selection import train_test_split
-from sklearn.metrics import confusion_matrix, accuracy_score, classification_report
 
 warnings.filterwarnings("ignore")
 
@@ -61,7 +68,13 @@ graph_options = ['Won', 'Draw', 'Lost', 'Goals For', 'Goals Against', 'Shots For
 banner2 = Image.open('football_logo/banner2.jpg')
 st.image(banner2, width=707)
 st.markdown(" ")
+
+load_dotenv()
     
+# Define and connect a new Web3 provider
+w3 = Web3(Web3.HTTPProvider(os.getenv("WEB3_PROVIDER_URI")))
+#w3 = Web3(Web3.HTTPProvider("HTTP://127.0.0.1:7545"))
+
 
 ####### Functions to import data and plot graphs and tables ###################################################################################
 
@@ -1052,6 +1065,21 @@ def teamScores(data, teams):
 
 
 @st.cache(allow_output_mutation=True)
+def teamScoresList(data, teams):   
+    
+    scoresList = []
+    count = len(teams)
+
+    for i in teams:
+        teamlineup = lineup(data, i)
+        teamscore = round(teamStrength(data, i, teamlineup),2)
+        scoresList.append(teamscore)
+        
+    return scoresList
+
+
+
+@st.cache(allow_output_mutation=True)
 def targetTeamScatter(data, targetTeam):   
     
     data = data.loc[(data['team'] == targetTeam)]
@@ -1496,3 +1524,264 @@ col1, col2, col3 = st.columns([1,1,1])
 col1.markdown("<h3 style='text-align: left; color: #872657; padding-left: 0px; font-size: 20px'><b>HomeWin - "+str(proHome)+" ("+str(oddHome)+")<b></h3>", unsafe_allow_html=True)
 col2.markdown("<h3 style='text-align: left; color: #872657; padding-left: 0px; font-size: 20px'><b>Draw - "+str(proDraw)+" ("+str(oddDraw)+")<b></h3>", unsafe_allow_html=True)
 col3.markdown("<h3 style='text-align: left; color: #872657; padding-left: 0px; font-size: 20px'><b>AwayWin - "+str(proAway)+" ("+str(oddAway)+")<b></h3>", unsafe_allow_html=True)
+
+
+
+############################################################################################################################
+########Load Contract########################################################################################################
+
+@st.cache(allow_output_mutation=True)
+def load_contract():
+
+    # Load the contract ABI
+    with open(Path('./contracts/compiled/bettingSystem_abi.json')) as f:
+        contract_abi = json.load(f)
+
+    # Set the contract address (this is the address of the deployed contract)
+    contract_address = os.getenv("SMART_CONTRACT_ADDRESS")
+
+    # Get the contract
+    contract = w3.eth.contract(
+        address=contract_address,
+        abi=contract_abi
+    )
+
+    return contract
+
+
+# Load the contract
+contract = load_contract()
+
+betAccount = generate_account()
+accounts = w3.eth.accounts[1:2]
+
+st.title("Betting Account")
+
+ClientAddress = st.selectbox("Select Account", options=accounts)
+st.markdown("---")
+
+################################################################################
+# Register New Betting Account
+################################################################################
+
+if((contract.functions.totalSupply().call() == 0)):
+
+    st.markdown("## Client Take-On")
+
+    owner_name = st.text_input("Enter the name of account holder")
+    account_name = st.text_input("Account Name")
+
+    st.markdown(" ")
+    st.markdown(" ")
+
+    if st.button("Register Account"):
+        
+        initial_appraisal_value = 0       
+        
+        init_id = contract.functions.registerBettingAccount(
+            ClientAddress,
+            owner_name,
+            account_name,
+            int(initial_appraisal_value)
+        )
+
+        tx_hash = init_id.transact({'from': ClientAddress, 'gas': 1000000})
+
+        receipt = w3.eth.waitForTransactionReceipt(tx_hash)   
+        
+        st.balloons()
+        
+        L = [str(initial_appraisal_value)]
+        file1 = open('balance.txt', 'w')
+        file1.writelines(L)
+        file1.close()
+
+if((contract.functions.totalSupply().call() == 1)):
+    
+    st.markdown("## Add Deposit")
+
+    file1 = open('balance.txt', 'r')
+    value = file1.readlines()
+    val = int(float(value[0]))
+
+    token_id=0
+    appraisal_value = st.number_input('Deposit Amount', min_value=0, max_value=100, step=1, value=0)
+    new_appraisal_value = appraisal_value + val
+    if st.button("Deposit"):
+
+        tx_hash = contract.functions.newAppraisal(
+            token_id,
+            int(new_appraisal_value),
+        ).transact({"from": w3.eth.accounts[0]})
+        receipt = w3.eth.waitForTransactionReceipt(tx_hash)
+        
+        st.balloons()
+        
+        L = [str(new_appraisal_value)]
+        file1 = open('balance.txt', 'w')
+        file1.writelines(L)
+        file1.close()
+
+file1 = open('balance.txt', 'r')
+value = file1.readlines()
+val = int(float(value[0]))
+
+st.write('Opening Account Balance: '+ str(val))
+
+####
+st.markdown("---")
+
+########################################################################################################
+if((contract.functions.totalSupply().call() == 1)):
+
+    st.markdown("## Place Bet")
+
+
+    colpick, colAmount = st.columns([1,1])
+
+    outcome = [home+' Win', 'Draw', away+' Win']
+
+
+    pick = colpick.selectbox('Pick', outcome, index=1)
+    amount = colAmount.number_input('Bet Amount', min_value=0.0, max_value=100.0, step=1.0, value=0.0)
+
+    Advantage = [0.05, 0.1, 0.15, 0.2, 0.25]
+    Adjustment = [-0.02, -0.04, -0.06, -0.08, -0.1]
+
+    homeAdvantage = random.choice(Advantage)
+    awayAdjustment = random.choice(Adjustment)
+
+    matchProbability = matchProb((homescore + homeAdvantage), (awayscore + awayAdjustment))
+
+    proHomeInt = int(round(matchProbability[0],4)*100)
+    proDrawInt = int(round(matchProbability[1],4)*100)
+    proAwayInt = int(round(matchProbability[2],4)*100)
+
+    result = random.choices(outcome, weights=(proHomeInt, proDrawInt, proAwayInt), k=1)
+
+    if st.button("Place Bet"):
+        
+        ## Using readlines()
+        file1 = open('balance.txt', 'r')
+        value = file1.readlines()
+        val = int(float(value[0]))
+
+        st.write('Result: '+result[0])
+        
+        st.markdown(" ")
+        if(result[0] == pick):
+
+            if(pick == (home+' Win')):
+                amount = round((amount*oddHome),2)
+            elif(pick == (away+' Win')):
+                amount = round((amount*oddAway),2)
+            else:
+                amount = round((amount*oddDraw),2)
+            
+            st.markdown('You Win!!!')   
+            st.markdown(amount)  
+            
+        else:
+            st.markdown('You Lose!!!')
+            amount = -1*amount
+            st.markdown(amount) 
+            
+            
+        token_id=0
+        new_appraisal_value = val + amount
+            
+        tx_hash = contract.functions.newAppraisal(
+            token_id,
+            int(new_appraisal_value),
+        ).transact({"from": w3.eth.accounts[0]})
+        receipt = w3.eth.waitForTransactionReceipt(tx_hash)
+        
+        L = [str(new_appraisal_value)]
+        file1 = open('balance.txt', 'w')
+        file1.writelines(L)
+        file1.close()  
+        
+        st.write('Updated Account Balance: '+str(new_appraisal_value))
+        
+
+#####################################################################################################
+#####crypto wallet (Withdrawal)######################################################################
+st.markdown(" ")
+st.markdown(" ")
+
+if((contract.functions.totalSupply().call() == 1)):
+    
+    st.markdown("## Withdrawal")
+
+
+    withdrawal = st.number_input('Withdrawal Amount', min_value=0.0, max_value=100.0, step=1.0, value=0.0)
+
+    if st.button("Withdraw Amount"):
+    
+        file1 = open('balance.txt', 'r')
+        value = file1.readlines()
+        val = int(float(value[0]))
+
+        if(withdrawal > val):
+            st.write ('Not enough funds to withdraw')
+        else:
+            new_appraisal_value = val - withdrawal
+            
+            token_id=0    
+            tx_hash = contract.functions.newAppraisal(
+                token_id,
+                int(new_appraisal_value),
+            ).transact({"from": w3.eth.accounts[0]})
+            receipt = w3.eth.waitForTransactionReceipt(tx_hash)
+            
+            st.balloons()
+            
+            L = [str(new_appraisal_value)]
+            file1 = open('balance.txt', 'w')
+            file1.writelines(L)
+            file1.close()
+
+            transaction_hash = send_transaction(w3, betAccount, accounts[0], withdrawal)
+
+            st.write(transaction_hash)
+
+            st.balloons()
+        
+## Using readlines()
+file1 = open('balance.txt', 'r')
+value = file1.readlines()
+val = int(float(value[0]))
+
+st.write('Closing Account Balance: '+ str(val))
+
+st.markdown("---")
+
+################################################################################
+# Account Report
+################################################################################
+if((contract.functions.totalSupply().call() == 1)):
+    st.markdown("## Get Account history")
+    
+    historylog = st.checkbox("Get Account Reports")
+    
+    Account_id = 0
+    if historylog:
+        appraisal_filter = contract.events.Appraisal.createFilter(
+            fromBlock=0,
+            argument_filters={"tokenId": Account_id}
+        )
+        appraisals = appraisal_filter.get_all_entries()
+        if appraisals:    
+            for appraisal in appraisals:
+                report_dictionary = dict(appraisal)
+                st.markdown("### Account Event Log")
+                st.write(report_dictionary)
+                st.markdown("### Account Details")
+                st.write(report_dictionary["args"])
+        else:
+            st.write("No Bets Placed")
+
+st.markdown("---")
+#######################################################################################
+#######################################################################################
+
