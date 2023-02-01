@@ -1,24 +1,18 @@
-# Initial imports
+# Initial Library Imports
 import pandas as pd
 pd.core.common.is_list_like = pd.api.types.is_list_like
 import numpy as np
 import random
-#import datetime as dt
 from pathlib import Path
 import math
 import os
 from scipy.stats import poisson,skellam
-import statistics
-from statistics import mode
 import plotly.express as px
 import plotly.graph_objects as go
 import plotly.io as pio
-#from datetime import date, timedelta
 import streamlit as st
 from PIL import Image
 import re
-#import time
-
 from dotenv import load_dotenv
 import json
 from dataclasses import dataclass
@@ -28,10 +22,13 @@ from web3 import Web3
 from wallet_functions import generate_account, get_balance, send_transaction
 
 import warnings
-
 warnings.filterwarnings("ignore")
 
-# App Inputs for user selection
+
+
+# App Inputs for user selection - these are the values the app will initially load on, thereafter the user will be able to make selections
+# and change this in the app
+
 games=6
 targTeam = 'Man United'
 teama = 'Man United'
@@ -39,7 +36,7 @@ teamb = 'Liverpool'
 graph_value= 'Points'
 
 
-# User selection menus
+# User selection menus for teams
 teams = ['Arsenal',
          'Aston Villa',
          'Bournemouth',
@@ -65,10 +62,7 @@ teams = ['Arsenal',
 
 graph_options = ['Won', 'Draw', 'Lost', 'Goals For', 'Goals Against', 'Shots For', 'Shots Against', 'T-Shots For','T-Shots Against', 'Points']
 
-banner2 = Image.open('football_logo/banner2.jpg')
-st.image(banner2, width=707)
-st.markdown(" ")
-
+#Load dotevn file
 load_dotenv()
     
 # Define and connect a new Web3 provider
@@ -76,13 +70,18 @@ w3 = Web3(Web3.HTTPProvider(os.getenv("WEB3_PROVIDER_URI")))
 #w3 = Web3(Web3.HTTPProvider("HTTP://127.0.0.1:7545"))
 
 
-####### Functions to import data and plot graphs and tables ###################################################################################
 
+###############################################################################################################################################
+####### Functions to import data and plot graphs and tables ###################################################################################
+###############################################################################################################################################
+
+#Function to import data from csv file
 @st.cache(allow_output_mutation=True)
 def data(file):
     df = pd.read_csv(file)
     return df
 
+# import required csv files
 seasons = data("Processed_Data/seasons.csv")
 team_merge = data("Processed_Data/team_merge.csv")
 merged_stats = data("Processed_Data/merged_stats.csv")
@@ -90,8 +89,8 @@ elements = data("FPL_Data/elements.csv")
 history = data("FPL_Data/all_history_df_current.csv")
 
 
-
-#@st.cache(allow_output_mutation=True)
+#Function to assign letter to player position - this is so we can sort players by position [GK, Defenders, Midfielders and then Forwards]
+@st.cache(allow_output_mutation=True)
 def changeName(position):
     if(position == 'Goalkeeper'):
         return 'a'
@@ -105,6 +104,8 @@ def changeName(position):
 
 elements['positionName'] = elements['position'].apply(changeName)
 
+
+## assign color for graph based on players category
 def colorScale(x):
     if (x == 'platin'):
         return 'grey'
@@ -123,6 +124,7 @@ def simulate_match(home_goals_avg, away_goals_avg, max_goals=10):
     return(np.outer(np.array(team_pred[0]), np.array(team_pred[1])))
 
 
+## Based on team scores and the simulation_Match function (Poisson Distribution), calculate probability of match outcome
 @st.cache(allow_output_mutation=True)
 def matchProb(homePower, awayPower):
     matrix = simulate_match(homePower,awayPower)
@@ -134,7 +136,7 @@ def matchProb(homePower, awayPower):
     return results
 
 
-
+## Function to generate a table of the selected team (targeTeam) past match results - Users can select the team and past matches to view
 @st.cache(allow_output_mutation=True)
 def tables(team, previousGames, targetTeam):
     
@@ -192,7 +194,7 @@ def tables(team, previousGames, targetTeam):
 
 
 
-
+# This funtion generates player statistics and attributes for players in the selected team
 @st.cache(allow_output_mutation=True)
 def teamTables(teamiFPL):
     
@@ -227,7 +229,7 @@ def teamTables(teamiFPL):
     return fig
 
 
-
+#This function statistics of all players for a chosen team
 @st.cache(allow_output_mutation=True)
 def playerTables(filter):
       
@@ -267,7 +269,7 @@ def playerTables(filter):
 
 
 
-
+# This function generates more player but for a specific player - users can select a particular playe and see how they performed in past matches
 @st.cache(allow_output_mutation=True)
 def playerStatistics(playerGames, games):
     
@@ -309,6 +311,8 @@ def playerStatistics(playerGames, games):
     return fig22
 
 
+#The below function generates match statistics for a chosen team. Based on the number of historical games selected by the user
+#The below function calculates varies statistics for the teams which populates into a table
 @st.cache(allow_output_mutation=True)
 def stats(homeTeam, target, games, graph, num):
     
@@ -463,10 +467,10 @@ def stats(homeTeam, target, games, graph, num):
     return graphs
 
 
+
 #Function to display FPL team data
 @st.cache(allow_output_mutation=True)
 def teamFpl(elements, team):
-    
     
     df = elements.loc[(elements['team'] == team)]
     df = df.sort_values(by=['positionName', 'bps_per_90'], ascending=True)
@@ -495,7 +499,7 @@ def lineup(elements, team):
 
 
 
-# Function for points
+# Function to get aggregate team score/strength
 @st.cache(allow_output_mutation=True)
 def teamStrength(elements, team, line):
     
@@ -509,6 +513,8 @@ def teamStrength(elements, team, line):
     return score
 
 
+#This function takes in the elements (players statistics) dataframe and the target team, and then filters 
+#on th team and specific attributes which is returned as a dataframe
 @st.cache(allow_output_mutation=True)
 def filterElements(elements, team):
     
@@ -519,6 +525,8 @@ def filterElements(elements, team):
     return df
 
 
+#Function that takes in a dataframe of player statistics as well as the name of a player and returns a dataframe of statistics 
+#for that particular player
 @st.cache(allow_output_mutation=True)
 def filterPlayer(history, name):
     
@@ -527,7 +535,7 @@ def filterPlayer(history, name):
     return df
 
 
-
+#Function that sorts players in a team according to their position [GK, Defenders, Midfielders and Forwards] and returns the sorted dataframe
 @st.cache(allow_output_mutation=True)
 def filterNames(elements, team):
     
@@ -538,7 +546,8 @@ def filterNames(elements, team):
     return playerNames
 
 
-
+#The below function takes in the two chosen teams aswell as game data and filters on matches which wer played between the chosen team 
+#Essentially this function looks at historical head to head matches between the teams and returns the result and statistics of the match
 @st.cache(allow_output_mutation=True)
 def statshead2head(Teams, teama, teamb, games, graph):
     
@@ -704,8 +713,10 @@ def statshead2head(Teams, teama, teamb, games, graph):
     return graphs
 
 
+
+#The below function returns a dataframe of players belonging to a specific category or cluster based on a chosen model 
+# (zScore, Kmeans or PCAKmeans) 
 def playerRank(elements, category, model):
-    
     if(model == 'zScore'):
         df = elements.loc[(elements['str-cat'] == category)]
     elif(model == 'kMeans'):
@@ -720,10 +731,11 @@ def playerRank(elements, category, model):
     return df
 
 
+
+#Function to return player statistics/attribtues for players in a particular category
 @st.cache(allow_output_mutation=True)
 def playerRankTables(filter):
-   
-    
+
     name = filter['web_name'].tolist()
     team = filter['teamName'].tolist()
     pos = filter['position'].tolist()
@@ -765,6 +777,8 @@ def playerRankTables(filter):
     return fig
 
 
+
+#Function to generate a scatter plot of players (score vs. cost) - used for user selected teams
 @st.cache(allow_output_mutation=True)
 def playerScatter(data):
 
@@ -772,7 +786,7 @@ def playerScatter(data):
                                     y=data['strength'],
                                     mode='markers',
                                     marker_color=colors,
-                                    text=data['description'])) # hover text goes here
+                                    text=data['description']))
 
     
     fig.update_layout(
@@ -788,6 +802,8 @@ def playerScatter(data):
     return fig
 
 
+
+#Function to generate a scatter plot of ALL players based on their category and the chosen clustering model
 @st.cache(allow_output_mutation=True)
 def playerScatterAll(data, model):   
     
@@ -845,7 +861,6 @@ def playerScatterAll(data, model):
         
     fig = go.Figure()
 
-    # Add traces
     fig.add_trace(go.Scatter(x=x0, y=y0,
                         mode='markers',
                         marker_color='burlywood',
@@ -892,9 +907,9 @@ def playerScatterAll(data, model):
 
 
 
+#This function aggregates the score and cost of players in a category and plots them in a scatter plot
 @st.cache(allow_output_mutation=True)
 def averageScatter(data, model):   
-    
     
     if (model == 'zScore'):
         
@@ -969,7 +984,6 @@ def averageScatter(data, model):
         
     fig = go.Figure()
 
-    # Add traces
     fig.add_trace(go.Scatter(x=[BronzeCost], y=[BronzeAvg],
                         mode='markers',
                         marker_color='burlywood',
@@ -1023,6 +1037,8 @@ def averageScatter(data, model):
     return fig
 
 
+
+##This function generates a graph of all team scores, which is then plotted as a scatter plot 
 @st.cache(allow_output_mutation=True)
 def teamScores(data, teams):   
     
@@ -1035,9 +1051,7 @@ def teamScores(data, teams):
         scoresList.append(teamscore)
         
     fig = go.Figure()
-
-    # Add traces
-    
+   
     for i in range(0, count):
         fig.add_trace(go.Scatter(x=[teams[i]], y=[scoresList[i]],
                             mode='markers',
@@ -1064,6 +1078,7 @@ def teamScores(data, teams):
     return fig
 
 
+#This function is used to calculate the team scores based on the most likely team starting lineup
 @st.cache(allow_output_mutation=True)
 def teamScoresList(data, teams):   
     
@@ -1078,13 +1093,12 @@ def teamScoresList(data, teams):
     return scoresList
 
 
-
+#This function generates a scatter plot of players (strength vs. cost) for the target/user selected team
 @st.cache(allow_output_mutation=True)
 def targetTeamScatter(data, targetTeam):   
     
     data = data.loc[(data['team'] == targetTeam)]
-    
-            
+      
     x0 = data['now_cost'].loc[(data['str-cat'] == 'bronze')]
     x1 = data['now_cost'].loc[(data['str-cat'] == 'silver')]
     x2 = data['now_cost'].loc[(data['str-cat'] == 'gold')]
@@ -1108,7 +1122,6 @@ def targetTeamScatter(data, targetTeam):
         
     fig = go.Figure()
 
-    # Add traces
     if(countBronze > 0):
         fig.add_trace(go.Scatter(x=x0, y=y0,
                             mode='markers',
@@ -1157,6 +1170,8 @@ def targetTeamScatter(data, targetTeam):
     return fig
 
 
+##The below function generates a scatter plot of players (strength vs. cost) for both of the teams selected by the user, which
+##is plotted on the same graph for comparison
 @st.cache(allow_output_mutation=True)
 def HeadToHeadScatter(data, home, away):   
      
@@ -1175,7 +1190,6 @@ def HeadToHeadScatter(data, home, away):
         
     fig = go.Figure()
 
-    # Add traces
     fig.add_trace(go.Scatter(x=x0, y=y0,
                         mode='markers',
                         marker_color=px.colors.qualitative.Light24[0],
@@ -1211,11 +1225,24 @@ def HeadToHeadScatter(data, home, away):
     return fig
 
 
-######  Show table with target team statistics and Graph   ##########################################################################################
+
+#################################################################################################################################
+######  Here we plot the components of the Player and Team Statistics  ##########################################################
+###### Essentially the below code generates the graphics for the app ############################################################
+#################################################################################################################################
+
+
+##Premier League Banner############################
+banner2 = Image.open('football_logo/banner2.jpg')
+st.image(banner2, width=707)
+st.markdown(" ")
+
+###Team Analysis and User Inputs for Target Team, Game History and Match Statistic(graph)
 st.markdown("<h3 style='text-align: left; color: purple; padding-left: 0px; font-size: 40px'><b>Team Analysis<b></h3>", unsafe_allow_html=True)
 
 colx, coly, colz = st.columns([1, 1, 1])
 
+##User Selection
 tTeam = colx.selectbox('Team', teams, index=13)
 lastGames = coly.number_input('Game History', min_value=2, step=1, value=6)
 graph = colz.selectbox('Graphic', graph_options, index=5)
@@ -1226,19 +1253,23 @@ graph_value = graph
     
 homeTeam = merged_stats[(merged_stats['HomeTeam']==tTeam) | (merged_stats['AwayTeam']==tTeam)]
 
-    
 tarTeam = tables(homeTeam, games, tTeam)
 
+
+
+#Based on User Selection, the below code generates the first table and graph of the app
 colq, colw = st.columns([1, 1])
 
 val = stats(homeTeam, targTeam, games, graph_value,0)
 colq.plotly_chart(val[0], use_container_width=True)
 colw.plotly_chart(val[1], use_container_width=True)
-
 tarTeam
 
 
-
+##The below code generates Player Statistics
+##It is only displayed if the user clicks on the checkbox
+##If checked a scatter plot of players is displayed along with 
+##A player analysis table and lastly users will be able to select a specific player to see how they performed in previous matches
 teamScatter = targetTeamScatter(elements, targTeam)
 
 filter = filterElements(elements, tTeam)
@@ -1259,17 +1290,20 @@ if display:
     player = playerStatistics(playerGames, games)
     st.write(player)
 
-
-######  Show table with team comparison statistics and Graphs with Head to Head Section   ############################################################
+##########################################################################################################################################
+######  Show table with team comparison statistics and Graphs with Head to Head Section   ################################################
 st.markdown(" ")
 st.markdown(" ")
 st.markdown("<h3 style='text-align: left; color: purple; padding-left: 0px; font-size: 40px'><b>Team Comparison<b></h3>", unsafe_allow_html=True)
 
 colx, coly = st.columns([1, 1])
-    
+
+##User Selection    
 home = colx.selectbox('Home Team', teams, index=13)
 away= coly.selectbox('Away Team', teams, index=11)
 
+
+##Display Team Logos
 homelogo = 'football_logo/'+home+'.png'
 awaylogo = 'football_logo/'+away+'.png'
 
@@ -1279,6 +1313,7 @@ awayImage = Image.open(awaylogo)
 teama = home
 teamb = away
 
+##Generate and Display Team graphs and table statistics based on each teams game history
 homeTeam12 = seasons[(seasons['HomeTeam']==home) | (seasons['AwayTeam']==home)]
 awayTeam12 = seasons[(seasons['HomeTeam']==away) | (seasons['AwayTeam']==away)]   
 
@@ -1301,7 +1336,6 @@ bothteams = bothteams[-games:]
 
 cols, colt = st.columns([1,1])
 
-
 val1 = stats(homeTeam_merged, teama, games, graph_value, 1)
 val2 = stats(awayTeam_merged, teamb, games, graph_value, 2)
 
@@ -1313,32 +1347,37 @@ colu, colv = st.columns([1,1])
 cols.plotly_chart(val1[1], use_container_width=True)
 colt.plotly_chart(val2[1], use_container_width=True)
 
+
+##Here we show the head to head statistics and graphs for the two teams 
 st.markdown("<h4 style='text-align: left; color: purple; padding-left: 0px; font-size: 40px'><b>Head-to-Head<b></h4>", unsafe_allow_html=True)
-test = tables(head2head_merged,games,teama) 
+mergedHeadtoHead = tables(head2head_merged,games,teama) 
 
 coli, colo = st.columns([1,1])
-test2 = statshead2head(head2head_merged, teama, teamb, games, graph_value)
-coli.plotly_chart(test2[0], use_container_width=True)
-colo.plotly_chart(test2[1], use_container_width=True)
+HeadtoHeadStats = statshead2head(head2head_merged, teama, teamb, games, graph_value)
+coli.plotly_chart(HeadtoHeadStats[0], use_container_width=True)
+colo.plotly_chart(HeadtoHeadStats[1], use_container_width=True)
 
-test
-
+mergedHeadtoHead
 
 headToheadScatter = HeadToHeadScatter(elements, home, away)
 
 displayHeadToHead = st.checkbox('Show '+home+" versus "+away+" Players Distribution")
 
+#Here we display the scatter plot of both teams players (strength vs. cost)
 if displayHeadToHead:
     st.markdown("<h3 style='text-align: left; color: #008080; padding-left: 0px; font-size: 20px'><b>"+home+" versus "+away+" Players Scatter Plot<b></h3>", unsafe_allow_html=True)
     st.write(headToheadScatter)
     
-   
+
+###############################################################################################################################################
+############ The below code generates the sidebar tables and selections for the streamlit App#################################################
+
+##Based on teams selected generate team logos in sidebar
 homeFPL = teamFpl(elements, home)
 awayFPL = teamFpl(elements, away)
 
 home_names = homeFPL['web_name'].values
 away_names = awayFPL['web_name'].values
-
 
 homeline0 = lineup(elements, home)
 awayline0 = lineup(elements, away)
@@ -1347,6 +1386,7 @@ awayline0 = lineup(elements, away)
 Image.open('football_logo/football_logo.jpg')
 
 
+##The below generates a logo and team lineup for the home team
 soccerImage = Image.open('football_logo/preview3.png')
 st.sidebar.image(soccerImage, width=200)
 
@@ -1367,10 +1407,14 @@ homeline = teamTables(homeFPL)
 
 displayhome = st.sidebar.checkbox("Show "+home+" Players")
 
+
+##Here if user checks the checkbox all players for the home team are displayed
 if displayhome:
     st.sidebar.plotly_chart(homeline)
 
 
+
+##The below generates a logo and team lineup for the away team
 st.sidebar.markdown(" ")
 st.sidebar.markdown(" ")
 st.sidebar.markdown("<h3 style='text-align: left; color: #008080; padding-left: 0px; font-size: 20px'><b>"+away+" - Away Team<b></h3>", unsafe_allow_html=True)
@@ -1386,11 +1430,13 @@ awayline = teamTables(awayFPL)
 
 displayaway = st.sidebar.checkbox("Show "+away+" Players")
 
+##Here if user checks the checkbox all players for the away team are displayed
 if displayaway:
     st.sidebar.plotly_chart(awayline)
   
     
-    
+
+## The below code generates graph of all the team scores
 categories = ['platin', 'gold', 'silver', 'bronze']
 
 models = ['zScore', 'kMeans', 'pcaKMeans']
@@ -1409,13 +1455,20 @@ st.write(allTeamScores)
 
 dreamteam = Image.open('football_logo/DreamTeam.png')
 
+
+##The below code displays the current dream team according to the EPL Fantasy League
 displayDreamTeam = st.checkbox('Show Dream Team')
 
+##Dream Team is displayed if user selects teh checkbox
 if displayDreamTeam:
     st.markdown("<h3 style='text-align: left; color: #008080; padding-left: 0px; font-size: 20px'><b>GW22 Dream Team<b></h3>", unsafe_allow_html=True)
     st.image(dreamteam, width=475)
     
 
+
+
+#############################################################################################################################################
+######### The below code shows scatter plots and tables based on player scores for each of the models considered ############################
 st.markdown(" ")
 st.markdown(" ")
 st.markdown("<h3 style='text-align: left; color: purple; padding-left: 0px; font-size: 40px'><b>Player Rankings<b></h3>", unsafe_allow_html=True)
@@ -1445,6 +1498,7 @@ playerscatter = playerScatter(playerCategory)
 st.markdown(" ")
 st.markdown(" ")
 
+##The below displays a scatter plot of players in a set category
 st.markdown("<h3 style='text-align: left; color: #008080; padding-left: 0px; font-size: 20px'><b>"+catName+" Players Scatter Plot<b></h3>", unsafe_allow_html=True)
 st.write(playerscatter)
 
@@ -1456,6 +1510,8 @@ playerscatterAll = playerScatterAll(elements, model)
     
 displayPlayers = st.checkbox('Show Players in Class')
 
+
+##If checked the below displays a table of players along with statistics in category
 if displayPlayers:
 
     st.markdown("<h3 style='text-align: left; color: #872657; padding-left: 0px; font-size: 20px'><b>"+catName+" Players Details<b></h3>", unsafe_allow_html=True)
@@ -1463,7 +1519,9 @@ if displayPlayers:
 
 displayAllPlayers = st.checkbox('Show All Players Scatter Plot')  
 avgCategory = averageScatter(elements, model)  
-    
+
+
+## If checked the below displays scatter plot of ALL players in all categories aswell as an aggregate scatter plot of each category
 if displayAllPlayers:
     st.markdown("<h3 style='text-align: left; color: #008080; padding-left: 0px; font-size: 20px'><b> All Players Scatter Plot<b></h3>", unsafe_allow_html=True)
     st.write(playerscatterAll)
@@ -1472,11 +1530,14 @@ if displayAllPlayers:
     st.write(avgCategory)
     
 
+###########################################################################################################################################
+##### Based on Team Scores, The scores are applied to a Poisson Model which calculates the probability of a match outcome ################
+##########################################################################################################################################
+
 st.markdown(" ")      
 st.markdown(" ")
 st.markdown(" ")
 premier, match = st.columns([1,6])
-
 image3 = Image.open('football_logo/preview1.png')
 premier.image(image3, use_column_width=True)
 
@@ -1525,11 +1586,8 @@ col1.markdown("<h3 style='text-align: left; color: #872657; padding-left: 0px; f
 col2.markdown("<h3 style='text-align: left; color: #872657; padding-left: 0px; font-size: 20px'><b>Draw - "+str(proDraw)+" ("+str(oddDraw)+")<b></h3>", unsafe_allow_html=True)
 col3.markdown("<h3 style='text-align: left; color: #872657; padding-left: 0px; font-size: 20px'><b>AwayWin - "+str(proAway)+" ("+str(oddAway)+")<b></h3>", unsafe_allow_html=True)
 
-
-
-############################################################################################################################
+#############################################################################################################################
 ########Load Contract########################################################################################################
-
 @st.cache(allow_output_mutation=True)
 def load_contract():
 
@@ -1595,7 +1653,10 @@ if((contract.functions.totalSupply().call() == 0)):
         file1 = open('balance.txt', 'w')
         file1.writelines(L)
         file1.close()
+        
 
+## After registering a client, the user can then deposit "funds or Ether" into the account
+## Which they will then use to plac bets
 if((contract.functions.totalSupply().call() == 1)):
     
     st.markdown("## Add Deposit")
@@ -1631,16 +1692,18 @@ st.write('Opening Account Balance: '+ str(val))
 ####
 st.markdown("---")
 
-########################################################################################################
+##########################################################################################################################################
+# The below code allows a client to place a bet with their account balance updated accordingly based on the simulated match outcome ####### 
 if((contract.functions.totalSupply().call() == 1)):
 
     st.markdown("## Place Bet")
 
-
+    ##The below code generates a match outcome based on team scores while allowing for a homeground advantage and away adjustment factos
+    ## Scores for Teams playing at home are randomly adjusted upwards while away teams randomly adjusted downward and is more reflective
+    ## of actual matches
     colpick, colAmount = st.columns([1,1])
 
     outcome = [home+' Win', 'Draw', away+' Win']
-
 
     pick = colpick.selectbox('Pick', outcome, index=1)
     amount = colAmount.number_input('Bet Amount', min_value=0.0, max_value=100.0, step=1.0, value=0.0)
@@ -1659,6 +1722,9 @@ if((contract.functions.totalSupply().call() == 1)):
 
     result = random.choices(outcome, weights=(proHomeInt, proDrawInt, proAwayInt), k=1)
 
+
+    ## After a bet is placed by a client the outcome is displayed and the clients account is adjusted accordingly
+    ## Note that to keep of the clients balance the cumulative balance is saved on a text file
     if st.button("Place Bet"):
         
         ## Using readlines()
