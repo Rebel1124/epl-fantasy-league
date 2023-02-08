@@ -182,8 +182,8 @@ Following the z-score player rankings from above. As a check/confirmation the sa
 
 ### *K-Means*
 
-<p align= "left">
-    <img width= "100%" src="Images/kmeansResults.png">
+<p align= "left" width="100">
+    <img width= "100%" src="images/kmeansResults.png">
 </p>
 
 <br>
@@ -191,7 +191,7 @@ Following the z-score player rankings from above. As a check/confirmation the sa
 ### *PCA K-Means*
 
 <p align= "left" width="100">
-    <img width= "100%" src="Images/PCA-kmeansResults.png">
+    <img width= "100%" src="images/PCA-kmeansResults.png">
 </p>
 
 <br>
@@ -207,7 +207,7 @@ Next, an interesting question I wanted to answer was given the player scores and
 <br>
 
 <p align= "left" width="100">
-    <img width= "100%" src="Images/dreamteam.png">
+    <img width= "100%" src="images/dreamteam.png">
 </p>
 
 <br>
@@ -221,11 +221,11 @@ Below is the plot of the teams generated (an serves as a form of efficient front
 <br>
 
 <p align= "left" width="100">
-    <img width= "100%" src="Images/dreamteamScatter.png">
+    <img width= "100%" src="images/dreamteamScatter.png">
 </p>
 
 <p align= "left" width="100">
-    <img width= "100%" src="Images/dreamteamHistogram.png">
+    <img width= "100%" src="images/dreamteamHistogram.png">
 </p>
 
 <br>
@@ -243,7 +243,7 @@ Functions for this (match probability calculator) were written in the streamlit 
 ### *Excel Poisson Distribution Model*
 
 <p align= "left" width="100">
-    <img width= "100%" src="Images/poissonMatrix.png">
+    <img width= "100%" src="images/poissonMatrix.png">
 </p>
 
 <br>
@@ -255,7 +255,7 @@ Below we see an example of a match prediction between Manchester United vs. Live
 ### *App Match Outcome Demo (Manchester United vs. Liverpool)*
 
 <p align= "left" width="100">
-    <img width= "100%" src="Images/matchPrediction.png">
+    <img width= "100%" src="images/matchPrediction.png">
 </p>
 
 <br>
@@ -271,26 +271,26 @@ The app has a clean user interface for customers and is structured as follows:
 Clients enter details for account take-on (betting account take-on) - including wallet address. As this was a prototype or proof of concept only one wallet address for selected for demo purposes although it is easy to add more.
 
 <p align= "left" width="100">
-    <img width= "100%" src="Images/clientTakeOn.png">
+    <img width= "100%" src="images/clientTakeOn.png">
 </p>
 
 After registering, clients can deposit ether into their account.
 
 <p align= "left" width="100">
-    <img width= "100%" src="Images/addDeposit.png">
+    <img width= "100%" src="images/addDeposit.png">
 </p>
 
 Once funds are available clients can place bets on matched. Match probabilities and odds are shown in the match sumulation section.
 Clients are also able to withdaraw funds, which will be sent to their Ganache wallet address.
 
 <p align= "left" width="100">
-    <img width= "100%" src="Images/withdrawal.png">
+    <img width= "100%" src="images/withdrawal.png">
 </p>
 
 Lastly clients are able to view a history of their betting account transactions on the blockchain viw the events log.
 
 <p align= "left" width="100">
-    <img width= "100%" src="Images/history.png">
+    <img width= "100%" src="images/history.png">
 </p>
 
 
