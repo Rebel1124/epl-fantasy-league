@@ -57,16 +57,16 @@ According to wikipeadia, it is the most watched sports league in the world, broa
 
 Before running the streamlit app, make sure firstly, you have Ganache, Remix and MetaMask open and that your Ganache ethereum wallet is connected to MetaMask.
 
-<p align= "left" width="30">
-    <img width= "30%" src="images/RemixGanacheMeta.png">
+<p align= "left" width="100">
+    <img width= "100%" src="images/RemixGanacheMeta.png">
 </p>
 
 <br>
 
 Once connected you can copy the code from the BettingSystem.sol (contracts folder) onto Remix. This is the samrt contract for our betting app and after deploying, you can copy the json abi into the bettingSystem_abi file (compiled folder).
 
-<p align= "left" width="30">
-    <img width= "30%" src="images/abi.png">
+<p align= "left" width="100">
+    <img width= "100%" src="images/abi.png">
 </p>
 
 <br>
@@ -75,8 +75,8 @@ Thereafter you can go to the deploy section on Remix and select the Injected Pro
 
 Once this is done you can copy the contrac address into the .env file in the root folder. Also ensure that MNEMONI and WEB3_PROVIDER_URI details matches your Ganache environment or workspace.
 
-<p align= "left" width="30">
-    <img width= "30%" src="images/env.png">
+<p align= "left" width="100">
+    <img width= "100%" src="images/env.png">
 </p>
 
 <br>
@@ -96,8 +96,8 @@ Data was collecting from two sources, namely:
 
 The first source allowed me to download csv files of historical season match results (Data folder) and the second source enables me to retrieve player statistics via the fantasy premier league API. Players scores were calculated by the Fanatsy league and updated weekly. A schedule of players score points per game is shown below:
 
-<p align= "left" width="30">
-    <img width= "30%" src="images/fantasyScoring.png">
+<p align= "left" width="100">
+    <img width= "100%" src="images/fantasyScoring.png">
 </p>
 
 <br>
@@ -182,16 +182,16 @@ Following the z-score player rankings from above. As a check/confirmation the sa
 
 ### *K-Means*
 
-<p align= "left" width="30">
-    <img width= "30%" src="Images/kmeansResults.png">
+<p align= "left" width="100">
+    <img width= "100%" src="Images/kmeansResults.png">
 </p>
 
 <br>
 
 ### *PCA K-Means*
 
-<p align= "left" width="30">
-    <img width= "30%" src="Images/PCA-kmeansResults.png">
+<p align= "left" width="100">
+    <img width= "100%" src="Images/PCA-kmeansResults.png">
 </p>
 
 <br>
@@ -206,8 +206,8 @@ Next, an interesting question I wanted to answer was given the player scores and
 
 <br>
 
-<p align= "left" width="30">
-    <img width= "30%" src="Images/dreamteam.png">
+<p align= "left" width="100">
+    <img width= "100%" src="Images/dreamteam.png">
 </p>
 
 <br>
@@ -220,12 +220,12 @@ Below is the plot of the teams generated (an serves as a form of efficient front
 
 <br>
 
-<p align= "left" width="30">
-    <img width= "30%" src="Images/dreamteamScatter.png">
+<p align= "left" width="100">
+    <img width= "100%" src="Images/dreamteamScatter.png">
 </p>
 
-<p align= "left" width="30">
-    <img width= "30%" src="Images/dreamteamHistogram.png">
+<p align= "left" width="100">
+    <img width= "100%" src="Images/dreamteamHistogram.png">
 </p>
 
 <br>
@@ -254,8 +254,8 @@ Below we see an example of a match prediction between Manchester United vs. Live
 
 ### *App Match Outcome Demo (Manchester United vs. Liverpool)*
 
-<p align= "left" width="50">
-    <img width= "50%" src="Images/matchPrediction.png">
+<p align= "left" width="100">
+    <img width= "100%" src="Images/matchPrediction.png">
 </p>
 
 <br>
@@ -270,27 +270,27 @@ The app has a clean user interface for customers and is structured as follows:
 
 Clients enter details for account take-on (betting account take-on) - including wallet address. As this was a prototype or proof of concept only one wallet address for selected for demo purposes although it is easy to add more.
 
-<p align= "left" width="30">
-    <img width= "30%" src="Images/clientTakeOn.png">
+<p align= "left" width="100">
+    <img width= "100%" src="Images/clientTakeOn.png">
 </p>
 
 After registering, clients can deposit ether into their account.
 
-<p align= "left" width="30">
-    <img width= "30%" src="Images/addDeposit.png">
+<p align= "left" width="100">
+    <img width= "100%" src="Images/addDeposit.png">
 </p>
 
 Once funds are available clients can place bets on matched. Match probabilities and odds are shown in the match sumulation section.
 Clients are also able to withdaraw funds, which will be sent to their Ganache wallet address.
 
-<p align= "left" width="30">
-    <img width= "30%" src="Images/withdrawal.png">
+<p align= "left" width="100">
+    <img width= "100%" src="Images/withdrawal.png">
 </p>
 
 Lastly clients are able to view a history of their betting account transactions on the blockchain viw the events log.
 
-<p align= "left" width="30">
-    <img width= "30%" src="Images/history.png">
+<p align= "left" width="100">
+    <img width= "100%" src="Images/history.png">
 </p>
 
 
