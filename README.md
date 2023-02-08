@@ -182,7 +182,7 @@ Following the z-score player rankings from above. As a check/confirmation the sa
 
 ### *K-Means*
 
-<p align= "left" width="100">
+<p align= "left">
     <img width= "100%" src="Images/kmeansResults.png">
 </p>
 
