@@ -1800,8 +1800,6 @@ if((contract.functions.totalSupply().call() == 1)):
             ).transact({"from": w3.eth.accounts[0]})
             receipt = w3.eth.waitForTransactionReceipt(tx_hash)
             
-            st.balloons()
-            
             L = [str(new_appraisal_value)]
             file1 = open('balance.txt', 'w')
             file1.writelines(L)
